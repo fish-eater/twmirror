@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: patch and deploy to GitHub Pages
 
 on:
   workflow_dispatch:
