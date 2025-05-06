@@ -29,9 +29,9 @@ jobs:
           path: scratch-gui
           persist-credentials: false
 
-      # 3) pre-build ptches
+      # 3) Pre‑build patches
       - name: Pre-build Patches
-        run: python3 prebuild_patch.py
+        run: python3 fisheater_patches.py
 
       # 4) Configure Pages & build as usual
       - name: Setup GitHub Pages
@@ -49,7 +49,11 @@ jobs:
           npm ci
           NODE_ENV=production ROUTING_STYLE=hash npm run build
 
-      # 5) Upload the built site for Pages
+      # 5) Post‑build patches (inject overrides into built HTML)
+      - name: Post-build Patches
+        run: python3 fisheater_patches.py --inject
+
+      # 6) Upload the built site for Pages
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
