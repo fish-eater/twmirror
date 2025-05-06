@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: patch/deploy to github pages
 
 on:
   workflow_dispatch:
@@ -29,28 +29,9 @@ jobs:
           path: scratch-gui
           persist-credentials: false
 
-      # 3) Inject your overrides _before_ building
-      - name: Inject custom site icon, cursors & color tweak
-        run: |
-          # — site icon
-          cp custom/site_icon.png \
-             scratch-gui/src/lib/gui/assets/icon.png
-
-          # — cursors
-          curl -fsSL https://fisheater.peterdance.com/resources/cursor.png \
-            -o scratch-gui/src/lib/gui/assets/cursor.png
-          curl -fsSL https://fisheater.peterdance.com/resources/cursor_select.png \
-            -o scratch-gui/src/lib/gui/assets/cursor_select.png
-
-          # — CSS var override (light theme; repeat for dark if needed)
-          patch -p0 << 'EOF'
-          *** Begin Patch
-          *** Update File: scratch-gui/src/lib/themes/gui/light.css
-          @@ :root {
-          -  --looks-secondary: #888888;
-          +  --looks-secondary: #00aa00;
-          *** End Patch
-          EOF
+      # 3) pre-build ptches
+      - name: Pre-build Patches
+        run: python3 prebuild_patch.py
 
       # 4) Configure Pages & build as usual
       - name: Setup GitHub Pages
