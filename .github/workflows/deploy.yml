@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages test
+name: Deploy to GitHub Pages
 
 on:
   workflow_dispatch:
@@ -15,31 +15,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    # 1) get my repo for custom files
     - name: Checkout self
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
         persist-credentials: false
-
-    # 2) get scratch‑gui upstream
     - name: Checkout scratch-gui
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
         repository: TurboWarp/scratch-gui
         path: scratch-gui
         persist-credentials: false
-
-    # 3) now override the source SVG before build
-    - name: Override default dango‑cat
-      run: |
-        cp custom/dango-cat.svg \
-           scratch-gui/src/lib/default-project/dango-cat.svg
-
-    # 4) remaining steps
     - name: Setup GitHub Pages
-      uses: actions/configure-pages@v1
+      id: pages
+      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
     - name: Install Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
       with:
         node-version: 20
     - name: Build
@@ -50,10 +40,10 @@ jobs:
     - name: Patch
       run: python3 patch.py
     - name: Upload pages artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
       with:
         path: ./scratch-gui/build/
-
+        retention-days: 30
 
   deploy:
     environment:
