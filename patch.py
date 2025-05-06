@@ -22,9 +22,9 @@ for path in glob.glob('scratch-gui/build/**/*.js', recursive=True):
 # CUSTOMIZATIONS ----------
 
 # --- override the default dango‑cat.svg in the build output ---
-for build_svg in glob.glob('scratch-gui/build/static/media/dango-cat.*.svg'):
-    print(f'Patching SVG {build_svg}')
-    shutil.copy('custom/dango-cat.svg', build_svg)
+#for build_svg in glob.glob('scratch-gui/build/static/media/dango-cat.*.svg'):
+#    print(f'Patching SVG {build_svg}')
+#    shutil.copy('custom/dango-cat.svg', build_svg)
 
 # --------------------------
 
