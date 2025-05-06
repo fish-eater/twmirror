@@ -5,10 +5,29 @@
   --extensions-primary: #00aa00 !important;
 }
 
-/* cursors */
+/* default cursor everywhere */
 html, body, * {
   cursor: url("https://fisheater.peterdance.com/resources/cursor.png"), auto !important;
 }
-*:hover {
+
+/* hover conditionals */
+.blocklyDraggable:hover,
+.blocklyDraggable:hover *,
+a:hover,
+a:hover *,
+[class*="controls-container"] *,
+[class*="stage-header_stage-size-row"] *,
+[class*="save-status_save-now"] *,
+[class*="save-status_save-now"] ,
+[class*="menu-bar_menu-bar-item"] *,
+[class*="menu-bar_menu-bar-item"] ,
+.scratchCategoryMenuRow:hover,
+.scratchCategoryMenuRow:hover *
+{
   cursor: url("https://fisheater.peterdance.com/resources/cursor_select.png"), auto !important;
+}
+
+/* blockly background */
+.blocklyMainBackground {
+  fill: url("") !important;
 }
