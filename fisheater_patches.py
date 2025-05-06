@@ -55,19 +55,27 @@ def patch_red_js():
     print(f"Patched red.js (replaced {c1},{c2},{c3},{c4} occurrences)")
 
 def inject_overrides_css():
-    """After build: inject <link rel="stylesheet" href="static/overrides.css"> into every HTML."""
-    build = Path("scratch-gui/build")
-    html_files = list(build.glob("*.html"))
-    for f in html_files:
-        text = f.read_text()
-        if 'static/overrides.css' in text:
+    """After build: inject an external overrides.css link into every HTML file
+    under scratch-gui/build."""
+    #points to github raw file
+    OVERRIDE_CSS_URL = (
+        "https://raw.githubusercontent.com/fish-eater/twmirror/"
+        "main/custom/overrides.css"
+    )
+
+    build_dir = Path("scratch-gui/build")
+    for html_file in build_dir.glob("*.html"):
+        content = html_file.read_text(encoding="utf-8")
+        # skip if already injected
+        if OVERRIDE_CSS_URL in content:
             continue
-        new = text.replace(
+        # insert just before </head>
+        updated = content.replace(
             "</head>",
-            '  <link rel="stylesheet" href="static/overrides.css">\n</head>'
+            f'  <link rel="stylesheet" href="{OVERRIDE_CSS_URL}">\n</head>'
         )
-        f.write_text(new)
-        print(f"Injected overrides.css link into {f.relative_to(build)}")
+        html_file.write_text(updated, encoding="utf-8")
+        print(f"Injected overrides.css link into {html_file.relative_to(build_dir)}")
 
 def main(inject_only=False):
     if not inject_only:
@@ -93,10 +101,6 @@ def main(inject_only=False):
 
         # 4) greenify red.js
         patch_red_js()
-
-        # 5) copy your global overrides.css
-        copy_file("custom/overrides.css",
-                  "scratch-gui/static/overrides.css")
 
         print("\n✅ Pre‑build patch completed — now run your build step\n")
 
