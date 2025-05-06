@@ -1,54 +1,42 @@
-import os, glob, shutil
+#!/usr/bin/env python3
+import os, glob, shutil, re, sys
 
-# 1) HTML patches
-ICON = '<link rel="icon" href="custom/site_icon.png">'
-CSS_CURSOR = """
+BUILD = os.path.join("scratch‑gui","build")
+if not os.path.isdir(BUILD):
+    print(f"ERROR: build dir not found at {BUILD}", file=sys.stderr)
+    sys.exit(1)
+
+# 1) Overwrite favicon.ico
+SRC_ICON = os.path.join("custom","site_icon.png")
+DST_ICON = os.path.join(BUILD,"favicon.ico")
+if os.path.exists(SRC_ICON):
+    print(f"→ Copying icon: {SRC_ICON} → {DST_ICON}")
+    shutil.copy(SRC_ICON, DST_ICON)
+else:
+    print(f"WARNING: custom icon not found at {SRC_ICON}")
+
+# 2) CSS injection snippet
+INJECT = """
 <style>
-  /* default cursor */
-  html, body, * {
-    cursor: url("https://fisheater.peterdance.com/resources/cursor.png"), auto !important;
-  }
-  /* pointer/hover cursor */
-  a:hover, button:hover, [role="button"]:hover, [style*="cursor:pointer"] {
-    cursor: url("https://fisheater.peterdance.com/resources/cursor_select.png"), auto !important;
-  }
-  /* change secondary look color */
-  :root { --looks-secondary: green !important; }
+html, body, * {
+  cursor: url("https://fisheater.peterdance.com/resources/cursor.png"), auto !important;
+}
+*:hover {
+  cursor: url("https://fisheater.peterdance.com/resources/cursor_select.png"), auto !important;
+}
+:root { --looks-secondary: #0f0 !important; }
 </style>
 """
 
-for path in glob.glob('scratch-gui/build/*.html'):
-  print(f'Patching HTML {path}')
-  with open(path, 'r') as f:
-    contents = f.read()
-    # inject favicon + cursor+color CSS just before </head>
-    contents = contents.replace(
-      '</head>',
-      ICON + CSS_CURSOR + '</head>'
-    )
-    # your existing removals
-    contents = contents.replace(
-      '<link rel="manifest" href="manifest.webmanifest">',
-      ''
-    )
-  with open(path, 'w') as f:
-    f.write(contents)
+# 3) Patch every top‐level HTML
+for html in glob.glob(os.path.join(BUILD,"*.html")):
+    print(f"→ Patching {html}")
+    text = open(html, encoding="utf8").read()
+    # only inject once
+    if INJECT.strip() not in text:
+        text = re.sub(r"(?i)<head>", "<head>" + INJECT, text, count=1)
+        open(html, "w", encoding="utf8").write(text)
+    else:
+        print("   (already patched)")
 
-# 2) JS patches (unchanged)
-for path in glob.glob('scratch-gui/build/**/*.js', recursive=True):
-  print(f'Patching JS {path}')
-  with open(path, 'r') as f:
-    contents = f.read().replace(
-      'https://trampoline.turbowarp.org',
-      'https://trampoline.turbowarp.xyz'
-    )
-  with open(path, 'w') as f:
-    f.write(contents)
-
-# 3) cleanup + index.html swap (unchanged)
-os.remove('scratch-gui/build/sw.js')
-os.remove('scratch-gui/build/manifest.webmanifest')
-os.remove('scratch-gui/build/fullscreen.html')
-os.remove('scratch-gui/build/index.html')
-shutil.copy('scratch-gui/build/editor.html', 'scratch-gui/build/index.html')
-shutil.copy('robots.txt',      'scratch-gui/build/robots.txt')
+print("Done.")
