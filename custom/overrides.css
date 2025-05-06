@@ -1,20 +1,14 @@
 /* ── fish‑eater global overrides ─────────────────────────────────────────── */
 
-/* 1) Green up the extensions-primary var */
+/* green some other things */
 :root {
-  --extensions-primary: #00aa00;
+  --extensions-primary: #00aa00 !important;
 }
 
-/* 2) Pluck in your custom cursors (cursor.png and cursor_select.png live next to this file) */
-/*    loaded from /static/, so url("cursor.png") → /static/cursor.png */
+/* cursors */
 html, body, * {
-  cursor: url("cursor.png"), auto !important;
+  cursor: url("https://fisheater.peterdance.com/resources/cursor.png"), auto !important;
 }
 *:hover {
-  cursor: url("cursor_select.png"), auto !important;
-}
-
-/* 3) Clear out blockly’s white stage background so you can supply your own via CSS */
-rect.blocklyMainBackground {
-  fill: url("") !important;
+  cursor: url("https://fisheater.peterdance.com/resources/cursor_select.png"), auto !important;
 }
