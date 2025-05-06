@@ -2,85 +2,79 @@
 import os
 import shutil
 import urllib.request
-
-def print_tree(path):
-    print(f"Directory tree for {path}:")
-    for root, dirs, files in os.walk(path):
-        depth = root.replace(path, '').count(os.sep)
-        indent = ' ' * 4 * depth
-        print(f"{indent}{os.path.basename(root)}/")
+import re
 
 
-def safe_copy(src, dst):
-    try:
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copy(src, dst)
-        print(f"Copied {src} -> {dst}")
-    except Exception as e:
-        print(f"Failed to copy {src} -> {dst}: {e}")
-
-
-def safe_download(url, dst):
-    try:
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        print(f"Downloading {url} -> {dst}")
-        urllib.request.urlretrieve(url, dst)
-        print(f"Downloaded {url} -> {dst}")
-    except Exception as e:
-        print(f"Failed to download {url}: {e}")
-
-
-def patch_css(var_name, old_val, new_val, file_path):
-    try:
-        with open(file_path, 'r') as f:
-            text = f.read()
-        if old_val in text:
-            text = text.replace(old_val, new_val)
-            with open(file_path, 'w') as f:
-                f.write(text)
-            print(f"Patched {var_name} in {file_path}")
-        else:
-            print(f"Did not find '{old_val}' in {file_path}")
-    except Exception as e:
-        print(f"Failed to patch CSS in {file_path}: {e}")
+def print_tree(base_dir, max_depth=2):
+    print(f"Directory tree for {base_dir} (depth {max_depth}):")
+    if not os.path.isdir(base_dir):
+        print(f"  {base_dir}/ not found")
+        return
+    for root, dirs, files in os.walk(base_dir):
+        rel = os.path.relpath(root, base_dir)
+        depth = 0 if rel == "." else rel.count(os.sep) + 1
+        if depth > max_depth:
+            dirs[:] = []  # don't recurse deeper
+            continue
+        indent = "    " * depth
+        name = base_dir if rel == "." else os.path.basename(root)
+        print(f"{indent}{name}/")
 
 
 def main():
-    # 1) Print working directory
-    print("Working directory:", os.getcwd())
+    # 1) Working directory
+    cwd = os.getcwd()
+    print(f"Working directory: {cwd}")
 
-    # 2) Ensure scratch-gui is present
-    gui_dir = 'scratch-gui'
-    if not os.path.isdir(gui_dir):
-        print(f"Error: '{gui_dir}' not found. Please checkout TurboWarp/scratch-gui into '{gui_dir}'")
-        return
+    # 2) Print trimmed directory tree
+    print_tree("scratch-gui", max_depth=2)
 
-    # 3) Print the directory tree for inspection
-    print_tree(gui_dir)
+    # 3) Copy custom site icon
+    src_icon = os.path.join("custom", "site_icon.png")
+    dest_icon = os.path.join("scratch-gui", "src", "lib", "assets", "icon.png")
+    try:
+        shutil.copyfile(src_icon, dest_icon)
+        print(f"Copied {src_icon} -> {dest_icon}")
+    except Exception as e:
+        print(f"Failed to copy site_icon.png: {e}")
 
-    # 4) Copy custom site icon
-    safe_copy(
-        os.path.join('custom', 'site_icon.png'),
-        os.path.join(gui_dir, 'src', 'lib', 'gui', 'assets', 'icon.png')
-    )
+    # 4) Download cursors
+    cursors = {
+        "https://fisheater.peterdance.com/resources/cursor.png":
+            os.path.join("scratch-gui", "src", "lib", "assets", "cursor.png"),
+        "https://fisheater.peterdance.com/resources/cursor_select.png":
+            os.path.join("scratch-gui", "src", "lib", "assets", "cursor_select.png")
+    }
+    for url, dest in cursors.items():
+        try:
+            urllib.request.urlretrieve(url, dest)
+            print(f"Downloaded {url} -> {dest}")
+        except Exception as e:
+            print(f"Failed to download {url}: {e}")
 
-    # 5) Download cursors
-    safe_download(
-        'https://fisheater.peterdance.com/resources/cursor.png',
-        os.path.join(gui_dir, 'src', 'lib', 'gui', 'assets', 'cursor.png')
-    )
-    safe_download(
-        'https://fisheater.peterdance.com/resources/cursor_select.png',
-        os.path.join(gui_dir, 'src', 'lib', 'gui', 'assets', 'cursor_select.png')
-    )
+    # 5) Patch CSS variable
+    css_pattern = re.compile(r"--looks-secondary\s*:\s*#[0-9A-Fa-f]{3,6}\s*;")
+    replacement = "--looks-secondary: #00aa00;"
+    css_files = [
+        os.path.join("scratch-gui", "src", "css", "light.css"),
+        os.path.join("scratch-gui", "src", "css", "dark.css")
+    ]
+    for css in css_files:
+        try:
+            with open(css, "r", encoding="utf-8") as f:
+                content = f.read()
+            new_content, count = css_pattern.subn(replacement, content)
+            if count > 0:
+                with open(css, "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                print(f"Patched CSS in {css} ({count} replacements)")
+            else:
+                print(f"No matches found in {css}, no changes made")
+        except FileNotFoundError:
+            print(f"CSS file not found: {css}")
+        except Exception as e:
+            print(f"Failed to patch CSS in {css}: {e}")
 
-    # 6) Patch CSS var in light theme
-    patch_css(
-        'looks-secondary',
-        '--looks-secondary: #888888;',
-        '--looks-secondary: #00aa00;',
-        os.path.join(gui_dir, 'src', 'lib', 'themes', 'gui', 'light.css')
-    )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
