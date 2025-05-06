@@ -59,6 +59,7 @@ def inject_overrides_css():
     under scratch-gui/build."""
     #points to github raw file
     OVERRIDE_CSS_URL = (
+        "https://corsproxy.io/?url="
         "https://raw.githubusercontent.com/fish-eater/twmirror/"
         "main/custom/overrides.css"
     )
